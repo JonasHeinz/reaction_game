@@ -3,10 +3,8 @@ import paho.mqtt.publish as publish
 import json
 import time
 from discover_broker import get_broadcasted_ip
+from Arrowgame import Arrowgame
 
-#from sense_hat import *
-
-#sense = SenseHat()
 # --------------------------------------------------------------------------
 # Hilfsfunktionen
 def get_local_ip():
@@ -23,22 +21,34 @@ def get_local_ip():
 # MQTT-Callbacks
 def on_connect(client, userdata, flags, rc):
     print(f"[Client] Mit MQTT-Broker verbunden (Code: {rc})")
-    client.subscribe("Master")
-    client.subscribe(f"Master/{get_local_ip()}")
+    client.subscribe("Master")                          # hört allgemeine Nachrichten
+    client.subscribe(f"Master/{get_local_ip()}")        # hört nur Nachrichten an diese IP
 
 def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload)  # JSON -> dict
     except:
         pass
+   
+    if data["info"] == "command": 
+        command = data.get("command")
+        print(f"[Client] Befehl erhalten: {command}")
 
-    if data["info"] == "Spielstart": 
-        for n in "321":
-            pass
-            #sense.show_letter(n)
-            #time.sleep(1)
-            #sense.clear()
-    #print(f"[Client] Nachricht empfangen: {msg.topic} -> {payload}")
+        # Blockierend: Arrowgame läuft, bis Ergebnis vorliegt
+        result = Arrowgame(command)
+        print(f"[Client] Ergebnis: {result}")
+        
+        data = {
+        "info": "Antwort",
+        "client_ip": get_local_ip(),
+        "result": result,
+        }
+        message = json.dumps(data)
+        
+        # Antwort an Broker senden
+        publish.single("Master", message, hostname=broker_ip, port=1883)
+        print(f"[Client] Antwort an Broker gesendet")
+       
 
 # --------------------------------------------------------------------------
 # Hauptskript
@@ -50,6 +60,7 @@ if __name__ == "__main__":
 
     print(f"[Client] Verbinde mit Broker {broker_ip}...")
 
+    # MQTT-Client erzeugen und starten
     client = mqtt.Client(userdata={"broker_ip": broker_ip})
     client.on_connect = on_connect
     client.on_message = on_message
@@ -70,5 +81,8 @@ if __name__ == "__main__":
     print(f"[Client] IP-Adresse an Broker gesendet.")
 
     
-while True:
-    time.sleep(1)
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n[Client] 🛑 Beendet.")

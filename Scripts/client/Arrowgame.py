@@ -2,14 +2,16 @@ import random
 import time
 from sense_hat import SenseHat
 
-def Arrowgame(timer=5):
+
+
+def Arrowgame(expected, timer=5):
     sense = SenseHat()
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Einstellungen
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    # Blinken des Pfeils
+    # Blinken des Pfeils 
     steps = 6
     delay = timer / steps
 
@@ -27,12 +29,7 @@ def Arrowgame(timer=5):
     # Event auswählen
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     sense.clear()
-    events = ["up", "down", "left", "right", "middle"]
-    expected = random.choice(events)
 
-    '''!! Auskommentieren !!'''
-    print("Erwarte:", expected)
-    '''!! Auskommentieren !!'''
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Anzeigematrizen
@@ -125,7 +122,8 @@ def Arrowgame(timer=5):
         sense.set_pixels(pixels)
 
     def show_arrow(direction, color=ON):
-        show_matrix(arrows[direction], color)
+        show_matrix(arrows[direction], 
+        color)
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Gamelogik
@@ -141,13 +139,13 @@ def Arrowgame(timer=5):
                         show_matrix(CHECK_MATRIX, RIGHT)
                         time.sleep(0.5)
                         sense.clear()  # Matrix aus
-                        return 't'
+                        return True
 
                     else:
                         show_matrix(X_MATRIX, ERR)
                         time.sleep(freeze)
                         sense.clear()  # Matrix aus
-                        return 'f'
+                        return False
 
         # Pfeil aus
         sense.clear()
@@ -159,12 +157,13 @@ def Arrowgame(timer=5):
                         show_matrix(CHECK_MATRIX, RIGHT)
                         time.sleep(freeze)
                         sense.clear()  # Matrix aus
-                        return 't'
+                        return True
+                        
                     else:
                         show_matrix(X_MATRIX, ERR)
                         time.sleep(freeze)
                         sense.clear()  # Matrix aus
-                        return 'f'
+                        return False
 
         delay *= freeze
 
@@ -172,5 +171,5 @@ def Arrowgame(timer=5):
     show_matrix(X_MATRIX, ERR)
     time.sleep(freeze)
     sense.clear()  # Matrix aus
-    return 'f'
+    return False
 
