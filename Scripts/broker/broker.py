@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import json
 from sense_hat import SenseHat   
-import csv
+from scoreboard import add_scoreboard
 
 
 # --------------------------------------------------------------------------
@@ -140,9 +140,41 @@ def on_message(client, userdata, msg):
             game_running = False
             elapsed = time.time() - start_time
             print(f"[Broker] 🎉 Ziel erreicht in {elapsed:.2f} Sekunden!")
+            position = add_scoreboard(elapsed, current_client)
+            explosion_animation()
+            sense.show_letter(str(position), text_colour=[0, 0 , 255], back_colour=[0, 0, 0])
         else:
             send_new_command()  # sofort neuer Befehl
- 
+
+def explosion_animation():
+    """Einfache Explosion vom Zentrum nach außen"""
+    center = [3, 3], [4, 3], [3, 4], [4, 4]
+    layer1 = [ [2,2], [2,3], [2,4], [2,5], [3,2], [4,2], [5,2], [5,3], [5,4], [5,5], [3,5], [4,5] ]
+    layer2 = [ [1,1], [1,3], [1,4], [1,6], [3,1], [4,1], [6,1], [6,3], [6,4], [6,6], [3,6], [4,6] ]
+
+    red = [255, 0, 0]
+    orange = [255, 165, 0]
+    yellow = [255, 255, 0]
+    black = [0, 0, 0]
+
+    # Step 1: Center "explodes"
+    for px in center:
+        sense.set_pixel(px[0], px[1], red)
+        time.sleep(0.2)
+
+        # Step 2: Next layer
+        for px in layer1:
+            sense.set_pixel(px[0], px[1], orange)
+        time.sleep(0.2)
+
+        # Step 3: Outer layer
+        for px in layer2:
+            sense.set_pixel(px[0], px[1], yellow)
+        time.sleep(0.2)
+
+        # Step 4: Clear explosion
+        sense.clear()
+        time.sleep(0.2)
 
 # --------------------------------------------------------------------------
 # MQTT starten
