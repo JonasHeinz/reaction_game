@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import json
 from sense_hat import SenseHat   
+import csv
 
 
 # --------------------------------------------------------------------------
@@ -17,7 +18,7 @@ sense = SenseHat()
 response_event = threading.Event()
 current_command = ""
 current_client = ""
-target_counter = 5 # Anzahl benötigter korrekter Reaktionen für 
+target_counter = 10 # Anzahl benötigter korrekter Reaktionen für 
 game_running = False
 correct_count = 0
 start_time = 0
@@ -72,7 +73,7 @@ def start_game():
 def send_new_command():
     """Wählt zufällig Client + Befehl und sendet ihn"""
     global current_command, current_client
-    commands = ["up", "down", "left", "right"]
+    commands = ["up", "down", "left", "right", "middle"]
     if not client_ip_list:
         print("[Broker] Keine Clients verbunden.")
         return

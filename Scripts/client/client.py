@@ -1,9 +1,14 @@
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
+from sense_hat import SenseHat   
 import json
 import time
 from discover_broker import get_broadcasted_ip
 from Arrowgame import Arrowgame
+
+reaction_time = 15
+
+sense = SenseHat()
 
 # --------------------------------------------------------------------------
 # Hilfsfunktionen
@@ -25,6 +30,7 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(f"Master/{get_local_ip()}")        # hört nur Nachrichten an diese IP
 
 def on_message(client, userdata, msg):
+    global reaction_time
     try:
         data = json.loads(msg.payload)  # JSON -> dict
     except:
@@ -35,7 +41,7 @@ def on_message(client, userdata, msg):
         print(f"[Client] Befehl erhalten: {command}")
 
         # Blockierend: Arrowgame läuft, bis Ergebnis vorliegt
-        result = Arrowgame(command)
+        result = Arrowgame(command, reaction_time)
         print(f"[Client] Ergebnis: {result}")
         
         data = {
@@ -48,6 +54,16 @@ def on_message(client, userdata, msg):
         # Antwort an Broker senden
         publish.single("Master", message, hostname=broker_ip, port=1883)
         print(f"[Client] Antwort an Broker gesendet")
+        if result:
+            reaction_time -= 0.5
+
+    elif data["info"] == "Spielstart":
+    # Countdown auf LED-Matrix
+        for n in "321":
+            sense.show_letter(n)
+            time.sleep(1)
+            sense.clear()
+        
        
 
 # --------------------------------------------------------------------------
@@ -76,7 +92,8 @@ if __name__ == "__main__":
         "client_ip": get_local_ip(),
         }
         message = json.dumps(data)
-        
+
+
     publish.single("Master", message, hostname=broker_ip, port=1883)
     print(f"[Client] IP-Adresse an Broker gesendet.")
 
